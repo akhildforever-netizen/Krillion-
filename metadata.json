@@ -1,0 +1,6 @@
+{
+  "name": "KRILLION",
+  "description": "Reverse-popularity ocean trivia game with custom dive workshop.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
