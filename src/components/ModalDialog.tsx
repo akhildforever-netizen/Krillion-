@@ -66,18 +66,18 @@ export function ModalDialog({
 
   return (
     <div
-      className="fixed inset-0 z-30 flex items-center justify-center p-4 bg-[#00091bba] backdrop-blur-[3px]"
+      className="fixed inset-0 z-30 flex items-center justify-center p-3 sm:p-4 bg-[#00091bba] backdrop-blur-[3px]"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="text-[#e0e9f5] bg-[#101c30] border-2 border-[#5da7bb] p-7 max-w-[620px] w-full max-h-[85vh] overflow-auto shadow-[8px_8px_0_#0005]"
+        className="text-[#e0e9f5] bg-[#101c30] border-2 border-[#5da7bb] p-5 sm:p-7 max-w-[620px] w-full max-h-[85vh] overflow-auto shadow-[8px_8px_0_#0005]"
         onClick={(e) => e.stopPropagation()}
       >
         {modal.type === 'help' && (
           <div>
-            <h2 className="text-[36px] font-normal leading-[1.1] text-[#5de3f9] mb-5">
+            <h2 className="text-[30px] sm:text-[36px] font-normal leading-[1.1] text-[#5de3f9] mb-5">
               HOW TO PLAY KRILLION
             </h2>
             <p className="text-[21px] text-[#93a6c4] leading-[1.45] mb-4">
@@ -118,28 +118,28 @@ export function ModalDialog({
             <div className="text-[17px] tracking-[3px] text-[#ff528d] uppercase mb-2">
               SEND AN EXPEDITION
             </div>
-            <h2 className="text-[36px] font-normal leading-[1.1] text-[#5de3f9] mb-4">
+            <h2 className="text-[30px] sm:text-[36px] font-normal leading-[1.1] text-[#5de3f9] mb-4">
               GOOD QUESTIONS TRAVEL.
             </h2>
-            <p className="text-[21px] text-[#93a6c4] leading-[1.45] mb-3">
+            <p className="text-[19px] sm:text-[21px] text-[#93a6c4] leading-[1.45] mb-3">
               <b className="text-[#e0e9f5]">Portable HTML</b> includes the game,
               editor, pixel art, font, and synthesized sound in one offline file.
             </p>
             <button
               type="button"
               onClick={onExportHtml}
-              className="krillion-btn krillion-btn-primary text-[20px] mb-5"
+              className="krillion-btn krillion-btn-primary w-full sm:w-auto text-[18px] sm:text-[20px] mb-5"
             >
               DOWNLOAD PORTABLE HTML
             </button>
-            <p className="text-[21px] text-[#93a6c4] leading-[1.45] mb-3">
+            <p className="text-[19px] sm:text-[21px] text-[#93a6c4] leading-[1.45] mb-3">
               <b className="text-[#e0e9f5]">Game pack</b> is a compact JSON file
               with your prompts, answers, and custom tiers.
             </p>
             <button
               type="button"
               onClick={onExportJson}
-              className="krillion-btn text-[20px] mb-5"
+              className="krillion-btn w-full sm:w-auto text-[18px] sm:text-[20px] mb-5"
             >
               DOWNLOAD GAME PACK
             </button>

@@ -1,5 +1,6 @@
 import embeddedAssets from './embeddedAssets.json';
-import type { Category, GamePack } from '../types/game';
+import sapientiaPackJson from './sapientiaPack.json';
+import type { Category, GamePack, PublishedPackRecord } from '../types/game';
 
 export const ASSETS = embeddedAssets as {
   water: string;
@@ -132,3 +133,22 @@ export const DEMO_PACK: GamePack = {
     })),
   })),
 };
+
+export const SAPIENTIA_PACK: GamePack = sapientiaPackJson as GamePack;
+
+export const BUILTIN_PACKS: PublishedPackRecord[] = [
+  {
+    id: 'sapientia-mbbs-survival',
+    pack: SAPIENTIA_PACK,
+    featured: true,
+    eventBanner: 'Top scorer wins FREE ENTRY into SAPIENTIA (10 Dec 2026)!',
+    source: 'builtin',
+  },
+  {
+    id: 'below-the-obvious',
+    pack: DEMO_PACK,
+    featured: false,
+    eventBanner: '',
+    source: 'builtin',
+  },
+];

@@ -1,0 +1,169 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        request.auth.token.email == 'akhildforever@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidPack(data) {
+      return data.keys().hasAll([
+          'id', 'format', 'version', 'title', 'description',
+          'seconds', 'categories', 'questions', 'featured',
+          'eventBanner', 'authorUid', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'format', 'version', 'title', 'description',
+          'seconds', 'categories', 'questions', 'featured',
+          'eventBanner', 'authorUid', 'createdAt', 'updatedAt'
+        ])
+        && data.id is string && data.id.size() >= 1 && data.id.size() <= 80 && data.id.matches('^[a-zA-Z0-9_-]+$')
+        && data.format is string && data.format in ['deep-dive', 'sapientia']
+        && data.version is int && data.version == 2
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 120
+        && data.description is string && data.description.size() <= 2000
+        && data.seconds is int && data.seconds >= 5 && data.seconds <= 180
+        && data.categories is list && data.categories.size() >= 1 && data.categories.size() <= 50 && data.categories[0] is map
+        && data.questions is list && data.questions.size() >= 1 && data.questions.size() <= 100 && data.questions[0] is map
+        && data.featured is bool
+        && data.eventBanner is string && data.eventBanner.size() <= 200
+        && data.authorUid is string && data.authorUid.size() >= 1 && data.authorUid.size() <= 128
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidScore(data) {
+      return data.keys().hasAll([
+          'uid', 'playerName', 'college', 'packId', 'packTitle',
+          'depth', 'points', 'maxPoints', 'acceptedCount',
+          'totalQuestions', 'emojiGrid', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'uid', 'playerName', 'college', 'packId', 'packTitle',
+          'depth', 'points', 'maxPoints', 'acceptedCount',
+          'totalQuestions', 'emojiGrid', 'createdAt'
+        ])
+        && data.uid is string && data.uid == request.auth.uid
+        && data.playerName is string && data.playerName.size() >= 1 && data.playerName.size() <= 80
+        && data.college is string && data.college.size() <= 100
+        && data.packId is string && data.packId.size() >= 1 && data.packId.size() <= 80 && data.packId.matches('^[a-zA-Z0-9_-]+$')
+        && data.packTitle is string && data.packTitle.size() >= 1 && data.packTitle.size() <= 120
+        && data.points is int && data.points >= 0 && data.points <= 100000
+        && data.depth is int && data.depth == data.points * 10 && data.depth <= 1000000
+        && data.maxPoints is int && data.maxPoints >= 1 && data.maxPoints <= 100000
+        && data.acceptedCount is int && data.acceptedCount >= 0 && data.acceptedCount <= 100
+        && data.totalQuestions is int && data.totalQuestions >= 1 && data.totalQuestions <= 100
+        && data.emojiGrid is string && data.emojiGrid.size() >= 1 && data.emojiGrid.size() <= 200
+        && data.createdAt == request.time;
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll([
+          'uid', 'playerName', 'college', 'email', 'bestDepth', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid', 'playerName', 'college', 'email', 'bestDepth', 'createdAt', 'updatedAt'
+        ])
+        && data.uid is string && data.uid == userId && data.uid == request.auth.uid
+        && data.playerName is string && data.playerName.size() >= 1 && data.playerName.size() <= 80
+        && data.college is string && data.college.size() <= 100
+        && data.email is string && data.email.size() <= 120
+        && data.bestDepth is int && data.bestDepth >= 0 && data.bestDepth <= 1000000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    match /admins/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+      allow write: if false;
+    }
+
+    match /packs/{packId} {
+      allow get: if isValidId(packId);
+      allow list: if true;
+      allow create: if isAdmin()
+        && isValidId(packId)
+        && isValidPack(incoming())
+        && incoming().id == packId
+        && incoming().authorUid == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin()
+        && isValidId(packId)
+        && isValidPack(incoming())
+        && incoming().id == existing().id
+        && incoming().authorUid == existing().authorUid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'format', 'title', 'description', 'seconds', 'categories',
+          'questions', 'featured', 'eventBanner', 'updatedAt'
+        ]);
+      allow delete: if isAdmin() && isValidId(packId);
+    }
+
+    match /scores/{scoreId} {
+      allow get: if isValidId(scoreId);
+      allow list: if true;
+      allow create: if isVerifiedUser()
+        && isValidId(scoreId)
+        && isValidScore(incoming());
+      allow update: if false;
+      allow delete: if isAdmin() && isValidId(scoreId);
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isVerifiedUser()
+        && isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'playerName', 'college', 'email', 'bestDepth', 'updatedAt'
+        ]);
+      allow delete: if isAdmin() && isValidId(userId);
+    }
+  }
+}

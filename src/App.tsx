@@ -3,16 +3,38 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { onAuthStateChanged, type User } from 'firebase/auth';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { EditorScreen } from './components/EditorScreen';
 import { Header } from './components/Header';
 import { HomeScreen } from './components/HomeScreen';
+import { LeaderboardScreen } from './components/LeaderboardScreen';
 import { ModalDialog, type ActiveModal } from './components/ModalDialog';
 import { OceanCanvas } from './components/OceanCanvas';
 import { PlayScreen } from './components/PlayScreen';
 import { ResultsScreen } from './components/ResultsScreen';
-import { DEFAULT_CATEGORIES, DEMO_PACK } from './data/defaults';
-import type { GamePack, RoundResult, RunState, ScreenMode } from './types/game';
+import { BUILTIN_PACKS, DEFAULT_CATEGORIES } from './data/defaults';
+import {
+  auth,
+  isAdminUser,
+  loadPlayerProfile,
+  publishPackToCloud,
+  sanitizePackId,
+  signInWithGoogle,
+  signOutPlayer,
+  submitScoreEntry,
+  subscribePublishedPacks,
+  subscribeScores,
+} from './firebase';
+import type {
+  GamePack,
+  PlayerProfile,
+  PublishedPackRecord,
+  RoundResult,
+  RunState,
+  ScoreEntry,
+  ScreenMode,
+} from './types/game';
 import { soundEngine } from './utils/audio';
 import {
   buildPortableHtml,
@@ -40,7 +62,8 @@ function createBlankDraft(): GamePack {
         answers: [
           {
             text: '',
-            category: categories.find((c) => c.id === 'schooler')?.id ?? categories[0].id,
+            category:
+              categories.find((c) => c.id === 'schooler')?.id ?? categories[0].id,
             aliases: [],
           },
         ],
@@ -51,8 +74,18 @@ function createBlankDraft(): GamePack {
 
 export default function App() {
   const [screen, setScreen] = useState<ScreenMode>('home');
-  const [pack, setPack] = useState<GamePack>(() => clone(DEMO_PACK));
-  const [draft, setDraft] = useState<GamePack>(() => clone(DEMO_PACK));
+  const [activePackId, setActivePackId] = useState<string>(BUILTIN_PACKS[0].id);
+  const [pack, setPack] = useState<GamePack>(() => clone(BUILTIN_PACKS[0].pack));
+  const [activeEventBanner, setActiveEventBanner] = useState<string>(
+    BUILTIN_PACKS[0].eventBanner,
+  );
+  const [cloudPacks, setCloudPacks] = useState<PublishedPackRecord[]>([]);
+  const [scores, setScores] = useState<ScoreEntry[]>([]);
+
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<PlayerProfile | null>(null);
+
+  const [draft, setDraft] = useState<GamePack>(() => clone(BUILTIN_PACKS[0].pack));
   const [dirty, setDirty] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState(0);
   const [editorStatus, setEditorStatus] = useState(
@@ -84,6 +117,55 @@ export default function App() {
     }, 4500);
   }, []);
 
+  const availablePacks = useMemo(() => {
+    const map = new Map<string, PublishedPackRecord>();
+    for (const b of BUILTIN_PACKS) {
+      map.set(b.id, b);
+    }
+    for (const c of cloudPacks) {
+      map.set(c.id, c);
+    }
+    return Array.from(map.values()).sort(
+      (a, b) => Number(b.featured) - Number(a.featured),
+    );
+  }, [cloudPacks]);
+
+  useEffect(() => {
+    const unsubAuth = onAuthStateChanged(auth, (nextUser) => {
+      setUser(nextUser);
+      if (nextUser) {
+        loadPlayerProfile(nextUser.uid)
+          .then((loaded) => setProfile(loaded))
+          .catch(() => {
+            // Profile may not exist yet before first score submission
+            setProfile(null);
+          });
+      } else {
+        setProfile(null);
+      }
+    });
+
+    const unsubPacks = subscribePublishedPacks(
+      (records) => setCloudPacks(records),
+      () => {
+        // Keep builtin packs if offline or unavailable
+      },
+    );
+
+    const unsubScores = subscribeScores(
+      (entries) => setScores(entries),
+      () => {
+        // Ignore transient offline read issues
+      },
+    );
+
+    return () => {
+      unsubAuth();
+      unsubPacks();
+      unsubScores();
+    };
+  }, []);
+
   useEffect(() => {
     document.body.dataset.screen = screen;
   }, [screen]);
@@ -107,6 +189,10 @@ export default function App() {
     };
   }, []);
 
+  const admin = isAdminUser(user);
+  const displayPlayerName =
+    profile?.playerName || user?.displayName || null;
+
   const goHomeImmediate = useCallback(() => {
     setModal(null);
     setRun((prev) =>
@@ -116,8 +202,7 @@ export default function App() {
     setScreen('home');
   }, []);
 
-  const handleHomeClick = () => {
-    if (screen === 'home') return;
+  const navigateSafely = (onProceed: () => void) => {
     if (screen === 'play') {
       setModal({
         type: 'confirm',
@@ -125,7 +210,7 @@ export default function App() {
         title: 'SURFACE EARLY?',
         message: 'Leave this dive? Your current run will end.',
         confirmLabel: 'LEAVE DIVE',
-        onConfirm: goHomeImmediate,
+        onConfirm: onProceed,
       });
       return;
     }
@@ -135,13 +220,53 @@ export default function App() {
         eyebrow: 'UNSAVED CHANGES',
         title: 'LEAVE WORKSHOP?',
         message:
-          'Export first for a reliable copy. Your browser draft is kept when storage is available.',
+          'Export or publish first for a reliable copy. Your browser draft is kept when storage is available.',
         confirmLabel: 'LEAVE WORKSHOP',
-        onConfirm: goHomeImmediate,
+        onConfirm: onProceed,
       });
       return;
     }
-    goHomeImmediate();
+    onProceed();
+  };
+
+  const handleHomeClick = () => {
+    if (screen === 'home') return;
+    navigateSafely(goHomeImmediate);
+  };
+
+  const handleOpenLeaderboard = () => {
+    if (screen === 'leaderboard') return;
+    navigateSafely(() => {
+      setModal(null);
+      setTargetDepth(0);
+      setScreen('leaderboard');
+    });
+  };
+
+  const handleSignIn = async () => {
+    try {
+      const signedIn = await signInWithGoogle();
+      showToast(`Signed in as ${signedIn.displayName || signedIn.email}`);
+    } catch {
+      showToast('Google sign-in was cancelled or blocked.');
+    }
+  };
+
+  const handleAuthClick = () => {
+    if (!user) {
+      void handleSignIn();
+      return;
+    }
+    setModal({
+      type: 'confirm',
+      eyebrow: admin ? 'ORGANIZER ACCOUNT' : 'PLAYER PASS',
+      title: displayPlayerName || 'SIGNED IN',
+      message: `Signed in with ${user.email ?? 'Google'}. Would you like to sign out?`,
+      confirmLabel: 'SIGN OUT',
+      onConfirm: () => {
+        void signOutPlayer().then(() => showToast('Signed out.'));
+      },
+    });
   };
 
   const handleToggleSound = () => {
@@ -151,6 +276,12 @@ export default function App() {
     if (next) {
       soundEngine.tone(440);
     }
+  };
+
+  const handleSelectPack = (record: PublishedPackRecord) => {
+    setActivePackId(record.id);
+    setPack(clone(record.pack));
+    setActiveEventBanner(record.eventBanner);
   };
 
   const startDive = useCallback(() => {
@@ -215,7 +346,7 @@ export default function App() {
         try {
           window.localStorage.setItem(DRAFT_STORAGE_KEY_V2, JSON.stringify(next));
           setEditorStatus(
-            'Draft saved in this browser. Export a copy to keep it.',
+            'Draft saved in this browser. Export or publish to keep it.',
           );
         } catch {
           setEditorStatus('Browser saving unavailable — export to keep your work.');
@@ -230,6 +361,8 @@ export default function App() {
     try {
       const validated = validatePack(draft);
       setPack(validated);
+      setActivePackId(sanitizePackId(validated.title));
+      setActiveEventBanner('');
       setDirty(false);
       setTargetDepth(0);
       setScreen('home');
@@ -250,6 +383,36 @@ export default function App() {
     }
   };
 
+  const handlePublishOnline = async (options: {
+    featured: boolean;
+    eventBanner: string;
+  }) => {
+    if (!user || !admin) {
+      showToast('Sign in as the event organizer to publish packs online.');
+      return;
+    }
+    try {
+      const validated = validatePack(draft);
+      const packId = sanitizePackId(validated.title);
+      await publishPackToCloud({
+        packId,
+        pack: validated,
+        featured: options.featured,
+        eventBanner: options.eventBanner,
+        authorUid: user.uid,
+      });
+      setPack(validated);
+      setActivePackId(packId);
+      setActiveEventBanner(options.eventBanner);
+      setDirty(false);
+      showToast(`Published “${validated.title}” online for all players!`);
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : 'Could not publish pack online.',
+      );
+    }
+  };
+
   const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -262,6 +425,8 @@ export default function App() {
       const parsed = JSON.parse(await file.text());
       const imported = validatePack(parsed);
       setPack(imported);
+      setActivePackId(sanitizePackId(imported.title));
+      setActiveEventBanner('');
       setDirty(false);
       setTargetDepth(0);
       setScreen('home');
@@ -306,6 +471,47 @@ export default function App() {
     [],
   );
 
+  const handleSubmitScore = async (payload: {
+    playerName: string;
+    college: string;
+    maxPoints: number;
+    acceptedCount: number;
+    emojiGrid: string;
+  }) => {
+    if (!user) {
+      throw new Error('Sign in with Google first to announce your score.');
+    }
+    if (!finalResults) {
+      throw new Error('No dive result to announce.');
+    }
+    const scoreId = await submitScoreEntry({
+      uid: user.uid,
+      email: user.email ?? '',
+      playerName: payload.playerName,
+      college: payload.college,
+      packId: activePackId,
+      packTitle: pack.title,
+      points: finalResults.total,
+      maxPoints: payload.maxPoints,
+      acceptedCount: payload.acceptedCount,
+      totalQuestions: pack.questions.length,
+      emojiGrid: payload.emojiGrid,
+    });
+    setProfile({
+      uid: user.uid,
+      playerName: payload.playerName,
+      college: payload.college,
+      email: user.email ?? '',
+      bestDepth: Math.max(profile?.bestDepth ?? 0, finalResults.total * 10),
+    });
+    return scoreId;
+  };
+
+  const activePackScores = useMemo(
+    () => scores.filter((s) => s.packId === activePackId),
+    [scores, activePackId],
+  );
+
   return (
     <>
       <OceanCanvas
@@ -319,7 +525,12 @@ export default function App() {
         <Header
           screen={screen}
           soundEnabled={soundEnabled}
+          playerName={displayPlayerName}
+          isSignedIn={Boolean(user)}
+          isAdmin={admin}
           onHome={handleHomeClick}
+          onLeaderboard={handleOpenLeaderboard}
+          onAuthClick={handleAuthClick}
           onToggleSound={handleToggleSound}
         />
 
@@ -327,6 +538,11 @@ export default function App() {
           {screen === 'home' && (
             <HomeScreen
               pack={pack}
+              activePackId={activePackId}
+              activeEventBanner={activeEventBanner}
+              availablePacks={availablePacks}
+              scores={scores}
+              onSelectPack={handleSelectPack}
               onStart={startDive}
               onEdit={() => openEditor(false)}
               onNewGame={() => openEditor(true)}
@@ -334,6 +550,7 @@ export default function App() {
               onShare={() => setModal({ type: 'share' })}
               onRestoreDraft={handleRestoreDraft}
               onHelp={() => setModal({ type: 'help' })}
+              onOpenLeaderboard={handleOpenLeaderboard}
             />
           )}
 
@@ -354,8 +571,16 @@ export default function App() {
           {screen === 'results' && finalResults && (
             <ResultsScreen
               pack={pack}
+              activePackId={activePackId}
               results={finalResults.results}
               totalPoints={finalResults.total}
+              isSignedIn={Boolean(user)}
+              defaultPlayerName={profile?.playerName || user?.displayName || ''}
+              defaultCollege={profile?.college || ''}
+              packScores={activePackScores}
+              onSignIn={handleSignIn}
+              onSubmitScore={handleSubmitScore}
+              onOpenLeaderboard={handleOpenLeaderboard}
               onReplay={startDive}
               onHome={goHomeImmediate}
               onToast={showToast}
@@ -365,15 +590,44 @@ export default function App() {
             />
           )}
 
+          {screen === 'leaderboard' && (
+            <LeaderboardScreen
+              packs={availablePacks}
+              scores={scores}
+              activePackId={activePackId}
+              currentUserUid={user?.uid ?? null}
+              isAdmin={admin}
+              onPlayPack={(record) => {
+                handleSelectPack(record);
+                setModal(null);
+                setFinalResults(null);
+                setTargetDepth(0);
+                setRun({
+                  index: 0,
+                  total: 0,
+                  results: [],
+                  phase: 'reading',
+                  attempts: 0,
+                });
+                setScreen('play');
+                soundEngine.splash();
+              }}
+              onHome={goHomeImmediate}
+              onToast={showToast}
+            />
+          )}
+
           {screen === 'editor' && (
             <EditorScreen
               draft={draft}
               selectedQuestion={selectedQuestion}
               statusNote={editorStatus}
+              isAdmin={admin}
               onSelectQuestion={setSelectedQuestion}
               onUpdateDraft={handleUpdateDraft}
               onSaveAndPlay={handleSaveAndPlay}
               onExportFromEditor={handleExportFromEditor}
+              onPublishOnline={handlePublishOnline}
               onToast={showToast}
               onRequestConfirmDeleteQuestion={(onConfirm) =>
                 setModal({
@@ -391,7 +645,7 @@ export default function App() {
 
         {screen !== 'play' && (
           <footer className="text-center text-[14px] text-[#90a8c6] tracking-[1px] mt-[30px]">
-            CUSTOM TRIVIA · ENTIRELY OFFLINE ·{' '}
+            KRILLION ONLINE · THEME PACKS &amp; EVENT LEADERBOARD ·{' '}
             <button
               type="button"
               onClick={() => setModal({ type: 'credits' })}
@@ -406,7 +660,7 @@ export default function App() {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".json,.deepdive,application/json"
+        accept=".json,.deepdive,.sapientia,application/json"
         hidden
         onChange={handleFileImport}
       />

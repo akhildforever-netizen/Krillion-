@@ -1,4 +1,4 @@
-export type ScreenMode = 'home' | 'play' | 'results' | 'editor';
+export type ScreenMode = 'home' | 'play' | 'results' | 'editor' | 'leaderboard';
 
 export interface Category {
   id: string;
@@ -19,13 +19,21 @@ export interface Question {
 }
 
 export interface GamePack {
-  format: 'deep-dive';
+  format: 'deep-dive' | 'sapientia';
   version: 2;
   title: string;
   description: string;
   seconds: number;
   categories: Category[];
   questions: Question[];
+}
+
+export interface PublishedPackRecord {
+  id: string;
+  pack: GamePack;
+  featured: boolean;
+  eventBanner: string;
+  source: 'builtin' | 'cloud';
 }
 
 export interface RoundResult {
@@ -48,4 +56,28 @@ export interface RunState {
   attempts: number;
   deadline?: number;
   remaining?: number;
+}
+
+export interface ScoreEntry {
+  id: string;
+  uid: string;
+  playerName: string;
+  college: string;
+  packId: string;
+  packTitle: string;
+  depth: number;
+  points: number;
+  maxPoints: number;
+  acceptedCount: number;
+  totalQuestions: number;
+  emojiGrid: string;
+  createdAtMs: number;
+}
+
+export interface PlayerProfile {
+  uid: string;
+  playerName: string;
+  college: string;
+  email: string;
+  bestDepth: number;
 }

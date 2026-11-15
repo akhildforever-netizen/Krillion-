@@ -6,10 +6,15 @@ interface EditorScreenProps {
   draft: GamePack;
   selectedQuestion: number;
   statusNote: string;
+  isAdmin: boolean;
   onSelectQuestion: (index: number) => void;
   onUpdateDraft: (updater: (prev: GamePack) => GamePack) => void;
   onSaveAndPlay: () => void;
   onExportFromEditor: () => void;
+  onPublishOnline: (options: {
+    featured: boolean;
+    eventBanner: string;
+  }) => Promise<void>;
   onToast: (message: string) => void;
   onRequestConfirmDeleteQuestion: (onConfirm: () => void) => void;
 }
@@ -67,14 +72,21 @@ export function EditorScreen({
   draft,
   selectedQuestion,
   statusNote,
+  isAdmin,
   onSelectQuestion,
   onUpdateDraft,
   onSaveAndPlay,
   onExportFromEditor,
+  onPublishOnline,
   onToast,
   onRequestConfirmDeleteQuestion,
 }: EditorScreenProps) {
   const [bulkText, setBulkText] = useState('');
+  const [publishing, setPublishing] = useState(false);
+  const [featured, setFeatured] = useState(true);
+  const [eventBanner, setEventBanner] = useState(
+    'Top scorer wins FREE ENTRY into SAPIENTIA!',
+  );
   const categoryListRef = useRef<HTMLDivElement | null>(null);
   const answerListRef = useRef<HTMLDivElement | null>(null);
 
@@ -311,8 +323,50 @@ export function EditorScreen({
           >
             Export / share
           </button>
+          {isAdmin && (
+            <button
+              type="button"
+              disabled={publishing}
+              onClick={async () => {
+                setPublishing(true);
+                try {
+                  await onPublishOnline({ featured, eventBanner });
+                } finally {
+                  setPublishing(false);
+                }
+              }}
+              className="krillion-btn krillion-btn-pink text-[14px] tracking-normal"
+            >
+              {publishing ? 'Publishing…' : '☁ Publish online'}
+            </button>
+          )}
         </div>
       </div>
+
+      {isAdmin && (
+        <div className="mt-3 p-3.5 bg-[#0c182bed] border border-[#ff528d] flex flex-wrap items-center gap-3">
+          <span className="font-pixel text-[15px] tracking-[2px] text-[#ff528d] uppercase">
+            ONLINE PUBLISH SETTINGS:
+          </span>
+          <input
+            aria-label="Event announcement banner"
+            value={eventBanner}
+            maxLength={200}
+            onChange={(e) => setEventBanner(e.target.value)}
+            placeholder="Event prize / free entry banner (optional)"
+            className="krillion-input text-[13px] py-1.5 px-2.5 flex-1 min-w-[220px]"
+          />
+          <label className="flex items-center gap-2 text-[13px] text-[#e0e9f5] cursor-pointer">
+            <input
+              type="checkbox"
+              checked={featured}
+              onChange={(e) => setFeatured(e.target.checked)}
+              className="w-4 h-4 accent-[#ff528d]"
+            />
+            Featured pack
+          </label>
+        </div>
+      )}
 
       <div className="min-h-[20px] text-[13px] text-[#93a6c4] mt-3">
         {statusNote}

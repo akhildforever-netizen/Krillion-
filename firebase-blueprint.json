@@ -1,0 +1,244 @@
+{
+  "entities": {
+    "Pack": {
+      "title": "Theme Pack",
+      "description": "An uploaded or published Krillion / Sapientia trivia theme pack playable online.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Unique pack slug identifier"
+        },
+        "format": {
+          "type": "string",
+          "enum": ["deep-dive", "sapientia"],
+          "description": "Pack format identifier"
+        },
+        "version": {
+          "type": "integer",
+          "description": "Pack schema version (2)"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Display title of the theme pack"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 2000,
+          "description": "Short summary of the theme pack"
+        },
+        "seconds": {
+          "type": "integer",
+          "description": "Seconds allowed per prompt (5-180)"
+        },
+        "categories": {
+          "type": "array",
+          "description": "Scoring rarity tiers (1-50 items)"
+        },
+        "questions": {
+          "type": "array",
+          "description": "Prompts and accepted answers (1-100 items)"
+        },
+        "featured": {
+          "type": "boolean",
+          "description": "Whether this pack is highlighted on the home screen"
+        },
+        "eventBanner": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Optional event prize/entry announcement banner"
+        },
+        "authorUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "UID of the admin who published the pack"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last update timestamp"
+        }
+      },
+      "required": [
+        "id",
+        "format",
+        "version",
+        "title",
+        "description",
+        "seconds",
+        "categories",
+        "questions",
+        "featured",
+        "eventBanner",
+        "authorUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ScoreEntry": {
+      "title": "Public Score Entry",
+      "description": "A verified player dive result announced on the online leaderboard (no PII).",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Firebase Auth UID of the player"
+        },
+        "playerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Public player name announced on the leaderboard"
+        },
+        "college": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Optional college or institution name"
+        },
+        "packId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Identifier of the theme pack played"
+        },
+        "packTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Title of the theme pack played"
+        },
+        "depth": {
+          "type": "integer",
+          "description": "Final depth reached in metres"
+        },
+        "points": {
+          "type": "integer",
+          "description": "Total points scored"
+        },
+        "maxPoints": {
+          "type": "integer",
+          "description": "Maximum possible points in the pack"
+        },
+        "acceptedCount": {
+          "type": "integer",
+          "description": "Number of prompts answered validly"
+        },
+        "totalQuestions": {
+          "type": "integer",
+          "description": "Total prompts in the pack"
+        },
+        "emojiGrid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Spoiler-free tier emoji string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server submission timestamp"
+        }
+      },
+      "required": [
+        "uid",
+        "playerName",
+        "college",
+        "packId",
+        "packTitle",
+        "depth",
+        "points",
+        "maxPoints",
+        "acceptedCount",
+        "totalQuestions",
+        "emojiGrid",
+        "createdAt"
+      ]
+    },
+    "UserProfile": {
+      "title": "Private Player Profile",
+      "description": "Verified player contact record isolated for owner and event organizer only.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Firebase Auth UID"
+        },
+        "playerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Registered name for free event entry"
+        },
+        "college": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "College or institution name"
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Verified Google account email"
+        },
+        "bestDepth": {
+          "type": "integer",
+          "description": "Best depth achieved by the player"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Profile creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last profile update timestamp"
+        }
+      },
+      "required": [
+        "uid",
+        "playerName",
+        "college",
+        "email",
+        "bestDepth",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/packs/{packId}": {
+      "schema": {
+        "$ref": "#/entities/Pack"
+      },
+      "description": "Published online theme packs readable by all visitors and managed by admins."
+    },
+    "/scores/{scoreId}": {
+      "schema": {
+        "$ref": "#/entities/ScoreEntry"
+      },
+      "description": "Publicly readable leaderboard scores and announcements without PII."
+    },
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Private player registration profiles with verified email accessible only to the owner and event organizer."
+    }
+  }
+}

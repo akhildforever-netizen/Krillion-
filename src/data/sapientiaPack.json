@@ -1,0 +1,538 @@
+{
+  "format": "sapientia",
+  "version": 2,
+  "title": "THE MBBS SURVIVAL DESCENT",
+  "description": "Six familiar medical-college confessions. One date. Find the answer that's One in a Krillion.",
+  "seconds": 25,
+  "categories": [
+    {
+      "id": "plankton",
+      "name": "Plankton",
+      "points": 10,
+      "color": "#afbdcb"
+    },
+    {
+      "id": "too-clever",
+      "name": "Too Clever",
+      "points": 15,
+      "color": "#ffb16b"
+    },
+    {
+      "id": "schooler",
+      "name": "Schooler",
+      "points": 30,
+      "color": "#79cfdf"
+    },
+    {
+      "id": "rare",
+      "name": "Rare",
+      "points": 60,
+      "color": "#6af0bb"
+    },
+    {
+      "id": "deep-cut",
+      "name": "Deep Cut",
+      "points": 85,
+      "color": "#c49aff"
+    },
+    {
+      "id": "krillion",
+      "name": "One in a Krillion",
+      "points": 100,
+      "color": "#ff5896"
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "Name an app a medical student opens when they're supposed to be studying.",
+      "answers": [
+        {
+          "text": "Instagram",
+          "category": "plankton",
+          "aliases": [
+            "Insta",
+            "IG"
+          ]
+        },
+        {
+          "text": "YouTube",
+          "category": "plankton",
+          "aliases": [
+            "YT"
+          ]
+        },
+        {
+          "text": "WhatsApp",
+          "category": "plankton",
+          "aliases": [
+            "Whats App",
+            "WA"
+          ]
+        },
+        {
+          "text": "Chrome",
+          "category": "too-clever",
+          "aliases": [
+            "Google Chrome"
+          ]
+        },
+        {
+          "text": "Telegram",
+          "category": "schooler",
+          "aliases": []
+        },
+        {
+          "text": "Spotify",
+          "category": "schooler",
+          "aliases": []
+        },
+        {
+          "text": "Reddit",
+          "category": "rare",
+          "aliases": []
+        },
+        {
+          "text": "Marrow",
+          "category": "rare",
+          "aliases": []
+        },
+        {
+          "text": "PrepLadder",
+          "category": "deep-cut",
+          "aliases": [
+            "Prep Ladder"
+          ]
+        },
+        {
+          "text": "Swiggy",
+          "category": "deep-cut",
+          "aliases": []
+        },
+        {
+          "text": "Zomato",
+          "category": "krillion",
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "prompt": "What does a student do immediately after making a perfect study timetable?",
+      "answers": [
+        {
+          "text": "Ignore it",
+          "category": "plankton",
+          "aliases": [
+            "Never follow it"
+          ]
+        },
+        {
+          "text": "Sleep",
+          "category": "plankton",
+          "aliases": [
+            "Take a nap"
+          ]
+        },
+        {
+          "text": "Redesign it",
+          "category": "too-clever",
+          "aliases": [
+            "Make another timetable"
+          ]
+        },
+        {
+          "text": "Procrastinate",
+          "category": "schooler",
+          "aliases": [
+            "Put off studying"
+          ]
+        },
+        {
+          "text": "Wait for Monday",
+          "category": "schooler",
+          "aliases": [
+            "Start next Monday"
+          ]
+        },
+        {
+          "text": "Share it with friends",
+          "category": "rare",
+          "aliases": [
+            "Send it to the group"
+          ]
+        },
+        {
+          "text": "Make it colour-coded",
+          "category": "rare",
+          "aliases": [
+            "Color code it",
+            "Colour code it"
+          ]
+        },
+        {
+          "text": "Spend two hours decorating it",
+          "category": "deep-cut",
+          "aliases": [
+            "Decorate the timetable"
+          ]
+        },
+        {
+          "text": "Declare that this time will be different",
+          "category": "deep-cut",
+          "aliases": [
+            "Say this time I am serious"
+          ]
+        },
+        {
+          "text": "Actually follow it",
+          "category": "krillion",
+          "aliases": [
+            "Stick to the timetable"
+          ]
+        }
+      ]
+    },
+    {
+      "prompt": "Name something that suddenly becomes interesting the night before an exam.",
+      "answers": [
+        {
+          "text": "Cleaning my room",
+          "category": "plankton",
+          "aliases": [
+            "Clean the room"
+          ]
+        },
+        {
+          "text": "Reading old chats",
+          "category": "plankton",
+          "aliases": [
+            "Old conversations"
+          ]
+        },
+        {
+          "text": "Reorganising notes",
+          "category": "too-clever",
+          "aliases": [
+            "Organizing notes",
+            "Organising notes"
+          ]
+        },
+        {
+          "text": "Watching random YouTube videos",
+          "category": "schooler",
+          "aliases": [
+            "Random YouTube videos"
+          ]
+        },
+        {
+          "text": "Browsing Wikipedia",
+          "category": "schooler",
+          "aliases": [
+            "Wikipedia rabbit holes"
+          ]
+        },
+        {
+          "text": "Researching career options",
+          "category": "rare",
+          "aliases": [
+            "Career research"
+          ]
+        },
+        {
+          "text": "Deep-cleaning my desk",
+          "category": "rare",
+          "aliases": [
+            "Cleaning my desk"
+          ]
+        },
+        {
+          "text": "Planning my entire future",
+          "category": "deep-cut",
+          "aliases": [
+            "Planning my life"
+          ]
+        },
+        {
+          "text": "Learning a new hobby",
+          "category": "deep-cut",
+          "aliases": [
+            "Starting a new hobby"
+          ]
+        },
+        {
+          "text": "Rearranging the entire room",
+          "category": "krillion",
+          "aliases": [
+            "Rearrange my room"
+          ]
+        }
+      ]
+    },
+    {
+      "prompt": "What's the biggest lie told in medical college before an exam?",
+      "answers": [
+        {
+          "text": "I've done nothing",
+          "category": "plankton",
+          "aliases": [
+            "I have done nothing",
+            "Haven't studied anything"
+          ]
+        },
+        {
+          "text": "I'm only revising",
+          "category": "plankton",
+          "aliases": [
+            "Just revising"
+          ]
+        },
+        {
+          "text": "I know absolutely nothing",
+          "category": "too-clever",
+          "aliases": [
+            "I know nothing"
+          ]
+        },
+        {
+          "text": "I'll finish by tonight",
+          "category": "schooler",
+          "aliases": [
+            "I will finish by tonight"
+          ]
+        },
+        {
+          "text": "I'll wake up at 4 AM",
+          "category": "schooler",
+          "aliases": [
+            "I will wake up at 4"
+          ]
+        },
+        {
+          "text": "I just need to do the PYQs",
+          "category": "rare",
+          "aliases": [
+            "Only PYQs are left",
+            "Just doing PYQs"
+          ]
+        },
+        {
+          "text": "I'll sleep early tonight",
+          "category": "rare",
+          "aliases": [
+            "I will sleep early"
+          ]
+        },
+        {
+          "text": "Everything is under control",
+          "category": "deep-cut",
+          "aliases": [
+            "I'm completely prepared"
+          ]
+        },
+        {
+          "text": "I'm not even stressed",
+          "category": "krillion",
+          "aliases": [
+            "Not stressed at all"
+          ]
+        }
+      ]
+    },
+    {
+      "prompt": "You've somehow survived all 19 MBBS subjects. What could possibly convince you to voluntarily face them all again?",
+      "answers": [
+        {
+          "text": "Prize money",
+          "category": "plankton",
+          "aliases": [
+            "Cash prize",
+            "Money"
+          ]
+        },
+        {
+          "text": "A ₹15,000 first prize",
+          "category": "too-clever",
+          "aliases": [
+            "15000 rupees",
+            "Rs 15000",
+            "15k first prize",
+            "Fifteen thousand rupees"
+          ]
+        },
+        {
+          "text": "₹35,500+ total prize pool",
+          "category": "schooler",
+          "aliases": [
+            "35,500+ prize pool",
+            "35.5k prize pool",
+            "Rs 35500 prize pool",
+            "Total prize money"
+          ]
+        },
+        {
+          "text": "A trophy",
+          "category": "schooler",
+          "aliases": []
+        },
+        {
+          "text": "A certificate",
+          "category": "schooler",
+          "aliases": [
+            "Participation certificate"
+          ]
+        },
+        {
+          "text": "Bragging rights",
+          "category": "rare",
+          "aliases": [
+            "Flexing rights"
+          ]
+        },
+        {
+          "text": "Beating students from other colleges",
+          "category": "rare",
+          "aliases": [
+            "Defeating other colleges",
+            "Beating other colleges"
+          ]
+        },
+        {
+          "text": "Representing my college nationally",
+          "category": "deep-cut",
+          "aliases": [
+            "Represent my college"
+          ]
+        },
+        {
+          "text": "Testing all 19 subjects in one place",
+          "category": "deep-cut",
+          "aliases": [
+            "All 19 MBBS subjects"
+          ]
+        },
+        {
+          "text": "Academic masochism",
+          "category": "krillion",
+          "aliases": [
+            "I clearly enjoy suffering"
+          ]
+        }
+      ]
+    },
+    {
+      "prompt": "What's the one place where knowing a little bit of everything might actually make you ₹15,000 richer?",
+      "answers": [
+        {
+          "text": "A quiz competition",
+          "category": "plankton",
+          "aliases": [
+            "A quiz"
+          ]
+        },
+        {
+          "text": "A medical quiz",
+          "category": "too-clever",
+          "aliases": [
+            "Medical quiz competition"
+          ]
+        },
+        {
+          "text": "An intercollegiate quiz",
+          "category": "schooler",
+          "aliases": [
+            "Inter college quiz",
+            "Inter-college quiz"
+          ]
+        },
+        {
+          "text": "A national-level quiz",
+          "category": "rare",
+          "aliases": [
+            "National quiz competition"
+          ]
+        },
+        {
+          "text": "An undergraduate medical quiz",
+          "category": "deep-cut",
+          "aliases": [
+            "UG medical quiz"
+          ]
+        },
+        {
+          "text": "An all-19-subject MBBS quiz",
+          "category": "krillion",
+          "aliases": [
+            "A quiz covering all 19 MBBS subjects",
+            "All 19 subject medical quiz"
+          ]
+        }
+      ]
+    },
+    {
+      "prompt": "Name something every MBBS student should do on 10 December 2026.",
+      "answers": [
+        {
+          "text": "Go to class",
+          "category": "plankton",
+          "aliases": [
+            "Attend class"
+          ]
+        },
+        {
+          "text": "Study",
+          "category": "too-clever",
+          "aliases": [
+            "Revise"
+          ]
+        },
+        {
+          "text": "Sleep",
+          "category": "schooler",
+          "aliases": [
+            "Catch up on sleep"
+          ]
+        },
+        {
+          "text": "Meet friends",
+          "category": "schooler",
+          "aliases": [
+            "Hang out with friends"
+          ]
+        },
+        {
+          "text": "Travel to BG Nagara",
+          "category": "rare",
+          "aliases": [
+            "Visit BG Nagara",
+            "Go to BG Nagara"
+          ]
+        },
+        {
+          "text": "Visit AIMS",
+          "category": "deep-cut",
+          "aliases": [
+            "Go to AIMS",
+            "Visit Adichunchanagiri Institute of Medical Sciences"
+          ]
+        },
+        {
+          "text": "Compete in a national medical quiz",
+          "category": "deep-cut",
+          "aliases": [
+            "Take part in a national medical quiz",
+            "Participate in a medical quiz"
+          ]
+        },
+        {
+          "text": "SAPIENTIA",
+          "category": "krillion",
+          "aliases": [
+            "SAPIENTIA 2.0",
+            "Sapientia 26",
+            "Sapientia'26",
+            "Sapientia quiz"
+          ]
+        }
+      ]
+    }
+  ]
+}

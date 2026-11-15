@@ -193,7 +193,7 @@ export function OceanCanvas({
       const desiredSurface =
         mode === 'home'
           ? h * 0.54
-          : mode === 'results'
+          : mode === 'results' || mode === 'leaderboard'
             ? h * 0.35
             : mode === 'editor'
               ? -h

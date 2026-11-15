@@ -68,8 +68,12 @@ interface LegacyPack {
 
 export function migratePack(input: unknown): LegacyPack {
   const raw = input as LegacyPack | null;
-  if (!raw || raw.format !== 'deep-dive' || ![1, 2].includes(Number(raw.version))) {
-    throw new Error('This is not a supported Krillion / Deep Dive pack.');
+  if (
+    !raw ||
+    !['deep-dive', 'sapientia'].includes(String(raw.format)) ||
+    ![1, 2].includes(Number(raw.version))
+  ) {
+    throw new Error('This is not a supported Krillion / Sapientia pack.');
   }
   const p = clone(raw);
   if (p.version === 1) {
@@ -207,7 +211,7 @@ export function validatePack(input: unknown): GamePack {
   });
 
   return {
-    format: 'deep-dive',
+    format: p.format === 'sapientia' ? 'sapientia' : 'deep-dive',
     version: 2,
     title: p.title.trim(),
     description: p.description,
@@ -264,7 +268,8 @@ export async function buildPortableHtml(pack: GamePack): Promise<string> {
     throw new Error('Could not load standalone offline template.');
   }
   const template = await res.text();
-  const safePack = JSON.stringify(pack).replace(/</g, '\\u003c');
+  const exportable = { ...pack, format: 'deep-dive' as const };
+  const safePack = JSON.stringify(exportable).replace(/</g, '\\u003c');
   return template
     .replace(
       /(<script id="embedded-pack" type="application\/json">)[\s\S]*?(<\/script>)/,
@@ -275,6 +280,16 @@ export async function buildPortableHtml(pack: GamePack): Promise<string> {
     .replace('<h1>DEEP DIVE</h1><div class="subtitle">THE CUSTOM DESCENT</div>', '<h1>KRILLION</h1><div class="subtitle">THE REVERSE TRIVIA GAME</div>');
 }
 
+export function buildEmojiGridString(
+  pack: GamePack,
+  results: RoundResult[],
+): string {
+  const maxCatPoints = Math.max(1, ...pack.categories.map((c) => c.points));
+  return results
+    .map((r) => emojiForCategory(categoryById(r.category, pack), maxCatPoints))
+    .join('');
+}
+
 export function buildShareSummary(
   pack: GamePack,
   results: RoundResult[],
@@ -282,9 +297,7 @@ export function buildShareSummary(
   maxPoints: number,
 ): string {
   const maxCatPoints = Math.max(1, ...pack.categories.map((c) => c.points));
-  const emojiRow = results
-    .map((r) => emojiForCategory(categoryById(r.category, pack), maxCatPoints))
-    .join('');
+  const emojiRow = buildEmojiGridString(pack, results);
 
   const lines = results.map((r, i) => {
     const cat = categoryById(r.category, pack);

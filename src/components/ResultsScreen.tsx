@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
-import type { GamePack, RoundResult } from '../types/game';
+import { useEffect, useMemo, useState } from 'react';
+import type { GamePack, RoundResult, ScoreEntry } from '../types/game';
 import {
+  buildEmojiGridString,
   buildShareSummary,
   categoryById,
   downloadFile,
@@ -12,8 +13,22 @@ import {
 
 interface ResultsScreenProps {
   pack: GamePack;
+  activePackId: string;
   results: RoundResult[];
   totalPoints: number;
+  isSignedIn: boolean;
+  defaultPlayerName: string;
+  defaultCollege: string;
+  packScores: ScoreEntry[];
+  onSignIn: () => Promise<void>;
+  onSubmitScore: (payload: {
+    playerName: string;
+    college: string;
+    maxPoints: number;
+    acceptedCount: number;
+    emojiGrid: string;
+  }) => Promise<string>;
+  onOpenLeaderboard: () => void;
   onReplay: () => void;
   onHome: () => void;
   onToast: (message: string) => void;
@@ -145,13 +160,38 @@ function QuestionAccordion({
 
 export function ResultsScreen({
   pack,
+  activePackId,
   results,
   totalPoints,
+  isSignedIn,
+  defaultPlayerName,
+  defaultCollege,
+  packScores,
+  onSignIn,
+  onSubmitScore,
+  onOpenLeaderboard,
   onReplay,
   onHome,
   onToast,
   onCopyFallback,
 }: ResultsScreenProps) {
+  const [playerName, setPlayerName] = useState(defaultPlayerName);
+  const [college, setCollege] = useState(defaultCollege);
+  const [submitting, setSubmitting] = useState(false);
+  const [submittedScoreId, setSubmittedScoreId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!playerName && defaultPlayerName) {
+      setPlayerName(defaultPlayerName);
+    }
+  }, [defaultPlayerName, playerName]);
+
+  useEffect(() => {
+    if (!college && defaultCollege) {
+      setCollege(defaultCollege);
+    }
+  }, [defaultCollege, college]);
+
   const maxPoints = useMemo(
     () =>
       pack.questions.reduce(
@@ -170,6 +210,46 @@ export function ResultsScreen({
     () => results.filter((r) => Boolean(r.answer)).length,
     [results],
   );
+
+  const emojiGrid = useMemo(
+    () => buildEmojiGridString(pack, results),
+    [pack, results],
+  );
+
+  const submittedRank = useMemo(() => {
+    if (!submittedScoreId) return null;
+    const sorted = [...packScores].sort(
+      (a, b) => b.depth - a.depth || b.createdAtMs - a.createdAtMs,
+    );
+    const idx = sorted.findIndex((s) => s.id === submittedScoreId);
+    return idx >= 0 ? idx + 1 : null;
+  }, [packScores, submittedScoreId]);
+
+  const handleAnnounceSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!playerName.trim()) {
+      onToast('Enter your full name so you can be recognized for free event entry.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const scoreId = await onSubmitScore({
+        playerName: playerName.trim(),
+        college: college.trim(),
+        maxPoints,
+        acceptedCount,
+        emojiGrid,
+      });
+      setSubmittedScoreId(scoreId);
+      onToast('Score announced on the live leaderboard!');
+    } catch (err) {
+      onToast(
+        err instanceof Error ? err.message : 'Could not announce your score.',
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleCopyResults = async () => {
     const summary = buildShareSummary(pack, results, totalPoints, maxPoints);
@@ -232,6 +312,117 @@ export function ResultsScreen({
               </div>
             );
           })}
+        </div>
+
+        {/* Official Score Announcement & Free Event Entry Form */}
+        <div className="my-5 p-4 md:p-5 bg-[#081426] border-2 border-[#5de3f9] text-left">
+          <div className="text-[15px] tracking-[2px] text-[#ff528d] uppercase mb-1">
+            🎟 FREE EVENT ENTRY LEADERBOARD
+          </div>
+          <h2 className="text-[26px] md:text-[30px] font-normal text-[#e0e9f5] mb-2">
+            ANNOUNCE YOUR SCORE
+          </h2>
+
+          {submittedScoreId ? (
+            <div>
+              <p className="text-[20px] text-[#6af0bb] mb-3">
+                ✓ Announced for <b>{playerName}</b>
+                {college ? ` (${college})` : ''} at{' '}
+                <b>{(totalPoints * 10).toLocaleString()}m</b>
+                {submittedRank ? ` · Currently Rank #${submittedRank}!` : '!'}
+              </p>
+              <button
+                type="button"
+                onClick={onOpenLeaderboard}
+                className="krillion-btn krillion-btn-primary text-[19px]"
+              >
+                🏆 VIEW LIVE SCORE ANNOUNCEMENTS
+              </button>
+            </div>
+          ) : !isSignedIn ? (
+            <div>
+              <p className="text-[19px] text-[#93a6c4] mb-3">
+                Sign in with Google so your verified name and score are
+                announced on the leaderboard to qualify for free entry.
+              </p>
+              <div className="flex flex-wrap gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => void onSignIn()}
+                  className="krillion-btn krillion-btn-pink text-[20px]"
+                >
+                  SIGN IN WITH GOOGLE TO ANNOUNCE SCORE
+                </button>
+                <button
+                  type="button"
+                  onClick={onOpenLeaderboard}
+                  className="krillion-btn text-[19px]"
+                >
+                  🏆 VIEW STANDINGS
+                </button>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleAnnounceSubmit} className="grid gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label
+                    htmlFor="announce-name"
+                    className="block text-[#93a6c4] text-[16px] mb-1"
+                  >
+                    Your Full Name (for Free Event Entry) *
+                  </label>
+                  <input
+                    id="announce-name"
+                    required
+                    maxLength={80}
+                    value={playerName}
+                    onChange={(e) => setPlayerName(e.target.value)}
+                    placeholder="e.g. Dr. Ananya Sharma"
+                    className="krillion-input text-[20px] p-2.5"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="announce-college"
+                    className="block text-[#93a6c4] text-[16px] mb-1"
+                  >
+                    College / Batch (optional)
+                  </label>
+                  <input
+                    id="announce-college"
+                    maxLength={100}
+                    value={college}
+                    onChange={(e) => setCollege(e.target.value)}
+                    placeholder="e.g. AIMS BG Nagara · Batch '23"
+                    className="krillion-input text-[20px] p-2.5"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2.5">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="krillion-btn krillion-btn-pink text-[20px]"
+                >
+                  {submitting
+                    ? 'ANNOUNCING…'
+                    : `📢 ANNOUNCE ${(totalPoints * 10).toLocaleString()}m SCORE`}
+                </button>
+                <button
+                  type="button"
+                  onClick={onOpenLeaderboard}
+                  className="krillion-btn text-[19px]"
+                >
+                  🏆 VIEW STANDINGS ({packScores.length})
+                </button>
+              </div>
+              <div className="text-[15px] text-[#7a94b1]">
+                Pack ID: {activePackId} · Your verified Google email is shared
+                only with the event organizer.
+              </div>
+            </form>
+          )}
         </div>
 
         <div className="flex items-center justify-center gap-2.5 flex-wrap mt-4">

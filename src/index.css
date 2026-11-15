@@ -84,86 +84,88 @@ body {
   text-shadow: 3px 3px #10394b;
 }
 
-.pixel-panel {
-  clip-path: var(--cut);
-  background: #0c182bef;
-  padding: 28px;
-}
+@layer components {
+  .pixel-panel {
+    clip-path: var(--cut);
+    background: #0c182bef;
+    padding: 28px;
+  }
 
-.krillion-panel {
-  background: #0c182bef;
-  border: 1px solid #354963;
-  box-shadow: 5px 5px 0 #02081177;
-}
+  .krillion-panel {
+    background: #0c182bef;
+    border: 1px solid #354963;
+    box-shadow: 5px 5px 0 #02081177;
+  }
 
-.krillion-btn {
-  cursor: pointer;
-  background: #111f34;
-  color: var(--ink);
-  border: 1px solid #657b98;
-  padding: 10px 17px;
-  letter-spacing: 1px;
-  box-shadow: 3px 3px 0 #0310247a;
-  min-height: 42px;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
+  .krillion-btn {
+    cursor: pointer;
+    background: #111f34;
+    color: var(--ink);
+    border: 1px solid #657b98;
+    padding: 10px 17px;
+    letter-spacing: 1px;
+    box-shadow: 3px 3px 0 #0310247a;
+    min-height: 42px;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
 
-.krillion-btn:hover:not(:disabled) {
-  background: #223b56;
-  border-color: var(--cyan);
-}
+  .krillion-btn:hover:not(:disabled) {
+    background: #223b56;
+    border-color: var(--cyan);
+  }
 
-.krillion-btn:active:not(:disabled) {
-  transform: translate(1px, 1px);
-  box-shadow: 1px 1px 0 #031024;
-}
+  .krillion-btn:active:not(:disabled) {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 #031024;
+  }
 
-.krillion-btn:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
+  .krillion-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
 
-.krillion-btn-primary {
-  border: 2px solid var(--cyan);
-  background: #122037;
-  box-shadow: 0 0 0 4px #081b2c99, 0 0 20px #5de3f922;
-}
+  .krillion-btn-primary {
+    border: 2px solid var(--cyan);
+    background: #122037;
+    box-shadow: 0 0 0 4px #081b2c99, 0 0 20px #5de3f922;
+  }
 
-.krillion-btn-primary:hover:not(:disabled) {
-  background: #193249;
-  box-shadow: 0 0 20px #5de3f955;
-}
+  .krillion-btn-primary:hover:not(:disabled) {
+    background: #193249;
+    box-shadow: 0 0 20px #5de3f955;
+  }
 
-.krillion-btn-pink {
-  background: var(--pink);
-  border-color: #ff8eb8;
-  color: #11182d;
-  box-shadow: 3px 3px 0 #750a3f;
-}
+  .krillion-btn-pink {
+    background: var(--pink);
+    border-color: #ff8eb8;
+    color: #11182d;
+    box-shadow: 3px 3px 0 #750a3f;
+  }
 
-.krillion-btn-pink:hover:not(:disabled) {
-  background: #ff6ea0;
-  border-color: #ffb8d2;
-}
+  .krillion-btn-pink:hover:not(:disabled) {
+    background: #ff6ea0;
+    border-color: #ffb8d2;
+  }
 
-.krillion-btn-quiet {
-  background: #0c1c2cbb;
-  color: #c2d2e6;
-}
+  .krillion-btn-quiet {
+    background: #0c1c2cbb;
+    color: #c2d2e6;
+  }
 
-.krillion-input {
-  width: 100%;
-  border: 1px solid #617995;
-  background: #081426;
-  color: var(--ink);
-  padding: 12px;
-  min-width: 0;
-  border-radius: 0;
-}
+  .krillion-input {
+    width: 100%;
+    border: 1px solid #617995;
+    background: #081426;
+    color: var(--ink);
+    padding: 12px;
+    min-width: 0;
+    border-radius: 0;
+  }
 
-.krillion-input:focus {
-  outline: 2px solid var(--cyan);
-  outline-offset: 2px;
+  .krillion-input:focus {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+  }
 }
 
 .answer-scroll {
